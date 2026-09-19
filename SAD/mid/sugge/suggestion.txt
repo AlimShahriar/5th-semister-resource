@@ -1,0 +1,17 @@
+Segment: 01
+- Data, Information
+- Type of information
+- Primary information
+- Secondary information
+
+Segment: 02
+- Computer-aided software engineering (CASE) 
+- Models advantages and disadvantages
+- Disadvantages of waterfall model
+
+Segment: 03
+- SWOT
+- Internal Factors
+- External Factors
+
+DMMI SIR(CM)
