@@ -1,0 +1,16 @@
+Same as, 
+
+-Motor duty cycle
+Types
+Graph (2/3)
+
+Motor, Generetor
+Math(26.3, 26.4, 29.1, 29.3)★
+
+Transformer
+- Def, working principle
+- loss★
+- Equivalent circuit ★
+- Test(Open/Short)
+- Why transformer rated into VA, KVA not w?★
+- Math(...........32.27, 32.15, 32.16)★10410:47 PM
