@@ -1,0 +1,13 @@
+1. Microprocessor def. | Structure | Advantage and disadvantage.
+2. ALU | Instruction cycle
+3. Microprocessor Types.
+4. Microprocessor vs microcontroller.
+5. Generetion of Microprocessor | Intel generation.
+6. Expansion bus.
+7. 8086 Block diagram | Pin diagram
+8. Fetch, decode & execute
+9. System bus diagram
+
+Theory and diagram eigula important. 
+
+Note: Kono course teacher provide korenai
