@@ -1,0 +1,15 @@
+Book Link: https://drive.google.com/file/d/1oCU06wjbyuDDedhhGleS1C5HobEFRwoh/view?usp=drivesdk
+
+Chapter-02
+(2.1-2.9) (2.7,2.8 bad) Instruction set, Design Principle, 2.4 er last page 63 porjonto, 2.5,2.6(SLL,SRL) Representing Instruction, Logical operations(page 78 er table),Addressing mode(page-98),Machine code to High level code conver
+
+Chapter-03
+Signed,unsigned num, addition, silubtraction,
+**Multiplication,
+**Divition
+**Floating point
+
+Chapter-04
+4.1,4.2,4.3,4.5(4.4 bad)
+
+Suggestion by Chairman Sir

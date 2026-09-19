@@ -1,0 +1,24 @@
+Theory:
+Segment: 01
+
+Def: CA, CPI, Clock cycle, Clock rate
+Differ.. between RISC and CISC
+Relative performance
+
+Segmet: 02
+
+MIPS addressing mode
+MIPS instruction format
+State four design principle of MIPS
+Instruction
+CPU
+
+Segment: 03
+
+First version of the multiplication hardware and flowchart.
+Second version of the multiplication hardware and flowchart.
+Final version of the multiplication hardware and flowchart.
+
+also Division...
+
+ami prev analysis kore dilam theory, eisob most important..15302:10 AM
