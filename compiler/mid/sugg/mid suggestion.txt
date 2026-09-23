@@ -1,0 +1,24 @@
+Compiler Suggestion from Saiful sir
+
+Chap 1:
+———
+1.1 ( compiler definition & block diagram)
+1.2 ( analysis of source program)
+Language processing system & block diagram
+Lexical Analysis (1.10 figure)
+Phases of Compiler (Frontend and backend)
+Compiler Constructive tools
+
+Chap 2:
+———-
+System definition and translation (2.2 & 2.3) -> if-else, do-while, identifier & number
+ex: 2.1 - 2.8
+Ambiguity, parse tree (page 41, 42)
+Synthesis attribute - page 46
+Allocated parse tree - Fig 2.6, 2.7 (page 48)
+Exercise: 2.1, 2.2, 2.3, 2.4, 2.6,
+
+Chapter 3: Class note 
+Extra: Conversion of the Romanian Number into CFG
+
+From book: Compiler (Ullman)

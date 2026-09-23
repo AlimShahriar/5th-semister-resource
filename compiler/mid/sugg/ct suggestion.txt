@@ -1,0 +1,35 @@
+CSE Archive IIUC:
+Class test:
+
+2. Different between compiler and interpreter.
+3. What is the basic tools of language processing system.
+4. Six phases
+
+int main() {
+int x = 3;
+int y = x + 2 * 1;
+return y;
+}
+
+Saifur sir
+
+CSE Archive IIUC:
+Class test- set-A
+
+1. define complier with block diagram
+2.rules of lexical analyzer
+3.compiler phases
+
+Compiler 
+Saifur sir.
+
+CSE Archive IIUC:
+Class test-
+Set-D
+
+1. semantic error with example
+2. Use of parser during compilation 
+3. language processing system 
+
+Compiler 
+Saifur sir
