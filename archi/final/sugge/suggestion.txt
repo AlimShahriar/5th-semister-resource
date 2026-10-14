@@ -1,0 +1,53 @@
+🟥Architecture suggestion 🟥 
+
+Prev qs +
+
+Single cycle Data path, Multiple cycle datapath 
+
+•How to handle when a processor requests data and experiences a cache miss. Briefly explain the Core Steps to Handle a Cache Miss.
+
+•Pipeline architecture is a design technique used in modern processors to increase instruction throughput—the number of instructions completed per unit of time. How It Works annd what are the Key Benefits and Challenges?
+
+•Pipelines do not always run perfectly, they face disruptions known as hazards. How many Pipeline Hazards? Briefly explain.
+
+•Cache memory is a small, high-speed type of volatile computer memory that sits directly between the CPU and the main memory (RAM). Its primary purpose is to act as a buffer and speed up data retrieval by storing copies of the data and instructions that the CPU is most likely to use next.
+
+Briefly explain Characteristics and Working Mechanism of the following: 
+​Speed and Location
+The Principle of Locality
+​Hits and Misses
+
+Cache memory can be classified by how data maps from main memory into the cache cells (Three Mapping Architectures). Briefly explain:
+Direct-Mapped Cache
+Fully Associative Cache and
+Set-Associative Cache
+
+Again Cache memory can be classified by by Hierarchy (Levels)[less important]
+Briefly explain:
+L1 Cache (Level 1)
+L2 Cache (Level 2)
+L3 Cache (Level 3)
+
+Briefly explain Translation Lookaside Buffers.
+
+Virtual Memory is a sophisticated memory management technique that creates an illusion for an application that it has a large, contiguous block of main memory (RAM), even if the physical RAM is limited and fragmented. It bridges the gap between the speed of physical RAM and the capacity of secondary storage (like an SSD or HDD). ​When a program runs, the CPU generates virtual addresses. These addresses do not point directly to physical locations in the RAM. Instead, they are intercepted by a hardware component called the Memory Management Unit (MMU). The MMU translates these virtual addresses into physical addresses using a mapping structure called a Page Table.
+How It Works??
+What are the Key Mechanisms? and
+Primary Benefits?
+
+How to handle page Fault?
+
+I/O Mapping and Interfacing:
+Because I/O devices operate at much slower speeds than the CPU and memory, they do not connect directly to the main system bus. Instead, they connect via an I/O Interface/Controller. The CPU communicates with these interfaces using two main schemes. Explain 
+1. ​Memory-Mapped I/O and
+2. Isolated (Port-Mapped) I/O
+
+In a computer system, the CPU, memory, and I/O devices must constantly exchange data, addresses, and control signals. This communication is facilitated by shared communication pathways called buses and specialized interconnection networks. Traditionally, components are connected via a System Bus, which is a collection of parallel wires divided into three functional groups based on the type of information they carry: Data Bus, Address Bus and Control Bus. Briefly explain these bus.
+
+Define interrupts, DMA, I/O Devices, RAID.
+
+Describe above all in details and with figure also please.
+
+Egula bujhe bhalo kore porte bolse.
+
+~5AF (Shafiullah Sir)
