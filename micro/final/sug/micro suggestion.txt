@@ -1,0 +1,18 @@
+Selected topic for segement 8
+
+
+1. Introduction to IoT: Core Concepts and 
+Technology Fundamentals(page-1)
+
+2. IoT Architecture: Core Components & 
+Technology Fundamentals(page-2)
+
+3. Sensors & Actuators: Fundamental IoT 
+Technology(page-3)
+
+4. IoT Infrastructure, Network Architecture & 
+Communication Protocols(page-4)
+
+5. From M2M to IoT: Evolution and Value Chains(page-7)
+
+6. IoT Applications Across Domains(page-9)10111:10 PM
