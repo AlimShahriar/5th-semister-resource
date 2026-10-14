@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Signal vs. Noise — EEE-2421 Numerical Pattern Log</title>
+<style>
+  :root {
+    --bg: #0a0d0f;
+    --panel: #12181b;
+    --panel-2: #161e22;
+    --ink: #e9eef0;
+    --dim: #86979d;
+    --line: #223035;
+    --hot: #ff9d0a;
+    --hot-dim: #4a3210;
+    --green: #52d17c;
+    --green-dim: #163024;
+    --cyan: #5fc9e8;
+    --cyan-dim: #132a30;
+    --gray: #7c8e94;
+    --violet: #b48ee8;
+    --violet-dim: #2a2138;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .scan {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 999;
+  }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+  a { color: var(--hot); }
+
+  /* ---------- HERO ---------- */
+  .hero { padding: 56px 0 32px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 16px;
+  }
+  .eyebrow::before { content: "▸ "; color: var(--hot); }
+  .title {
+    font-size: clamp(2.4rem, 7vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    margin: 0 0 18px;
+  }
+  .title .signal { color: var(--hot); }
+  .title .vs { color: var(--dim); font-weight: 500; font-size: 0.5em; vertical-align: middle; padding: 0 0.1em; }
+  .title .noise { color: #4a565b; text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #3a454a; }
+  .subhead { color: var(--dim); font-size: 1.05rem; max-width: 62ch; margin: 0 0 28px; }
+  .subhead strong { color: var(--ink); font-weight: 600; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 10px; }
+  .stat {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--dim);
+  }
+  .stat b { color: var(--ink); font-size: 15px; }
+  .stat.flag { border-color: var(--hot-dim); color: var(--hot); }
+  .stat.flag b { color: var(--hot); }
+
+  .quicknav { display: flex; flex-wrap: wrap; gap: 18px; padding: 16px 0 0; font-family: var(--mono); font-size: 12.5px; }
+  .quicknav a { color: var(--dim); text-decoration: none; border-bottom: 1px dotted var(--line); padding-bottom: 2px; }
+  .quicknav a:hover, .quicknav a:focus-visible { color: var(--hot); border-color: var(--hot); }
+
+  /* ---------- SECTIONS ---------- */
+  section { padding: 52px 0; border-bottom: 1px solid var(--line); }
+  .sec-eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--hot); margin: 0 0 10px;
+  }
+  .sec-title { font-size: 1.7rem; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .sec-intro { color: var(--dim); max-width: 68ch; margin: 0 0 32px; }
+  .sec-intro code { font-family: var(--mono); background: var(--panel); padding: 1px 6px; border-radius: 4px; color: var(--ink); font-size: 0.92em; }
+
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+
+  /* ---------- TIERS ---------- */
+  .tier { margin-bottom: 40px; }
+  .tier-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tier-badge {
+    font-family: var(--mono); font-weight: 700; font-size: 12.5px; letter-spacing: 0.06em;
+    padding: 5px 11px; border-radius: 5px; text-transform: uppercase; white-space: nowrap;
+  }
+  .tier-badge.t1 { background: var(--hot); color: #201400; }
+  .tier-badge.t2 { background: var(--green); color: #06210f; }
+  .tier-badge.t3 { background: var(--cyan); color: #062126; }
+  .tier-badge.t4 { background: var(--gray); color: #0d1416; }
+  .tier-name { font-size: 1.15rem; font-weight: 700; }
+  .tier-sub { color: var(--dim); font-size: 0.95rem; margin: 0 0 18px; max-width: 68ch; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px 22px; margin-bottom: 14px;
+  }
+  .card.t1 { border-left: 3px solid var(--hot); }
+  .card.t2 { border-left: 3px solid var(--green); }
+  .card.t3 { border-left: 3px solid var(--cyan); }
+  .card.t4 { border-left: 3px solid var(--gray); }
+
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .card-title { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  .card-freq { font-family: var(--mono); font-size: 12.5px; color: var(--dim); white-space: nowrap; }
+  .card-body { color: var(--dim); font-size: 0.95rem; margin: 0 0 14px; }
+  .card-body strong { color: var(--ink); }
+
+  .subcard { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 13px 16px; margin-top: 10px; }
+  .subcard-label { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--hot); margin: 0 0 6px; }
+  .subcard p { margin: 0; font-size: 0.92rem; color: var(--dim); }
+  .subcard p strong { color: var(--ink); }
+  .subcard .where { display: block; margin-top: 8px; font-size: 0.82rem; color: #5c6b70; font-family: var(--mono); }
+
+  .watchlist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .watchlist li {
+    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gray);
+    border-radius: 8px; padding: 12px 16px; font-size: 0.92rem; color: var(--dim);
+  }
+  .watchlist li strong { color: var(--ink); }
+  .watchlist li span.tag { font-family: var(--mono); font-size: 11px; color: var(--gray); float: right; }
+
+  /* ---------- LED STRIP ---------- */
+  .led-strip { display: flex; gap: 5px; margin: 2px 0 3px; }
+  .led { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #2c3b41; background: transparent; }
+  .led.lit-t1 { background: var(--hot); border-color: var(--hot); box-shadow: 0 0 6px rgba(255,157,10,0.6); }
+  .led.lit-t2 { background: var(--green); border-color: var(--green); box-shadow: 0 0 6px rgba(82,209,124,0.55); }
+  .led.lit-t3 { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 6px rgba(95,201,232,0.55); }
+  .led.lit-t4 { background: var(--gray); border-color: var(--gray); }
+  .led.lit-d { background: var(--violet); border-color: var(--violet); box-shadow: 0 0 6px rgba(180,142,232,0.55); }
+  .led-labels { display: flex; gap: 5px; font-family: var(--mono); font-size: 8.5px; color: #4a565b; }
+  .led-labels span { width: 9px; text-align: center; }
+
+  /* ---------- PATTERN LOG ---------- */
+  .pattern-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .pattern-row:last-child { border-bottom: none; }
+  .pattern-name { font-weight: 600; font-size: 0.95rem; }
+  .pattern-frac { font-family: var(--mono); font-size: 13px; color: var(--dim); text-align: right; }
+  .pattern-frac b { color: var(--ink); }
+  .pattern-bar-wrap { grid-column: 1 / -1; height: 6px; background: var(--panel); border-radius: 4px; overflow: hidden; }
+  .pattern-bar { height: 100%; border-radius: 4px; }
+  .pattern-meta { grid-column: 1 / -1; }
+
+  /* ---------- ARCHIVE ---------- */
+  .archive-sem { margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .archive-sem summary {
+    cursor: pointer; padding: 16px 20px; font-weight: 700; font-size: 1rem;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; list-style: none;
+  }
+  .archive-sem summary::-webkit-details-marker { display: none; }
+  .archive-sem summary::after { content: "+"; font-family: var(--mono); color: var(--hot); font-size: 20px; font-weight: 400; }
+  .archive-sem[open] summary::after { content: "–"; }
+  .archive-sem summary .sem-meta { font-family: var(--mono); font-size: 12px; color: var(--dim); font-weight: 400; margin-left: 10px; }
+  .archive-body { padding: 4px 20px 20px; display: grid; gap: 10px; }
+
+  .problem { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .problem-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 7px; flex-wrap: wrap; }
+  .problem-tag { font-family: var(--mono); font-size: 12px; color: var(--hot); font-weight: 700; }
+  .problem-marks { font-family: var(--mono); font-size: 11px; color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 2px 7px; }
+  .problem-topic { font-family: var(--mono); font-size: 10.5px; color: #5c6b70; text-transform: uppercase; letter-spacing: 0.04em; }
+  .problem-body { font-size: 0.9rem; color: var(--dim); margin: 0; }
+  .problem-body strong { color: var(--ink); }
+  .problem-body .note { display: block; margin-top: 6px; color: var(--hot); font-size: 0.83rem; }
+
+  /* ---------- DERIVATIONS ---------- */
+  .deriv-row { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--violet); border-radius: 8px; padding: 16px 18px; margin-bottom: 12px; }
+  .deriv-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .deriv-title { font-weight: 700; font-size: 0.98rem; }
+  .deriv-frac { font-family: var(--mono); font-size: 12.5px; color: var(--dim); }
+  .deriv-body { color: var(--dim); font-size: 0.9rem; margin: 0; }
+  .deriv-body strong { color: var(--ink); }
+
+  footer { padding: 40px 0 70px; }
+  footer p { color: #5c6b70; font-size: 0.85rem; max-width: 64ch; }
+  footer .foot-hot { color: var(--hot); }
+
+  @media (max-width: 640px) {
+    .hero { padding: 40px 0 24px; }
+    section { padding: 38px 0; }
+    .led { width: 7px; height: 7px; }
+    .led-labels span { width: 7px; font-size: 7px; }
+    .card, .archive-sem summary, .archive-body { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scan" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Pattern analysis · EEE-2421 · Electrical Drives &amp; Instrumentation</p>
+    <h1 class="title"><span class="signal">Signal</span><span class="vs">vs</span><span class="noise">Noise</span></h1>
+    <p class="subhead">Every calculation-based question from the <strong>7 semesters</strong> you've shared — Spring 2022 through Autumn 2025 — logged, cross-referenced, and ranked by what keeps repeating (signal) versus what showed up once and vanished (noise).</p>
+    <div class="stats">
+      <div class="stat"><b>7</b> semesters read</div>
+      <div class="stat"><b>27</b> calculation problems</div>
+      <div class="stat"><b>7</b> recurring derivations</div>
+      <div class="stat flag"><b>1</b> topic at 7/7 — every paper, no exceptions</div>
+    </div>
+    <nav class="quicknav">
+      <a href="#predictions">Predictions</a>
+      <a href="#patterns">Pattern log</a>
+      <a href="#archive">Full archive</a>
+      <a href="#derivations">Derivation watch</a>
+    </nav>
+  </header>
+
+  <!-- ============ PREDICTIONS ============ -->
+  <section id="predictions">
+    <p class="sec-eyebrow">Confidence readout</p>
+    <h2 class="sec-title">What's likely on the next paper</h2>
+    <p class="sec-intro">Ranked by how often each problem type has fired across the 7 papers. This is pattern-matching on a small sample, not a guarantee — treat it as where your practice time earns the most marks per hour, not as the full syllabus.</p>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-badge t1">Tier 1 · Near-certain</span>
+        <span class="tier-name">Induction motor — speed / slip / rotor frequency / torque</span>
+      </div>
+      <p class="tier-sub">This lives in Q1(b) — or its OR — in <strong style="color:var(--ink)">every single one of the 7 papers</strong>. In the last four semesters running it showed up <em>twice per paper</em> (main and OR both numeric). If you only prepare one calculation cold, it's this one.</p>
+
+      <div class="card t1">
+        <div class="card-head">
+          <p class="card-title">Two variants dominate the slot</p>
+          <span class="card-freq">7/7 semesters</span>
+        </div>
+        <div class="led-strip">
+          <span class="led lit-t1" title="Spring 2022"></span><span class="led lit-t1" title="Spring 2023"></span><span class="led lit-t1" title="Autumn 2023"></span><span class="led lit-t1" title="Spring 2024"></span><span class="led lit-t1" title="Autumn 2024"></span><span class="led lit-t1" title="Spring 2025"></span><span class="led lit-t1" title="Autumn 2025"></span>
+        </div>
+        <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+
+        <div class="subcard">
+          <p class="subcard-label">Variant A — "the 4-pole, 50 Hz" version</p>
+          <p><strong>Given:</strong> a 4- (occasionally 5- or 6-) pole, 3-phase motor on a 50 Hz supply. <strong>Find:</strong> synchronous/stator field speed, plus rotor speed and rotor-current frequency at 2–3 stated slip values, plus frequency at standstill.</p>
+          <span class="where">Word-for-word identical in Spring 2025 Q1(b) and Autumn 2025 Q1(b). Close variants in Spring 2022 Q1(d) and Autumn 2024 Q2(a)-OR.</span>
+        </div>
+        <div class="subcard">
+          <p class="subcard-label">Variant B — the "208 V / 10 hp / Y-connected" classic</p>
+          <p><strong>Given:</strong> 208-V, 10-hp, four-pole, 60-Hz, Y-connected motor, full-load slip = 5%. <strong>Find:</strong> synchronous speed, rotor speed, rotor frequency, shaft torque — this exact four-part ask, straight out of a standard machines textbook.</p>
+          <span class="where">Autumn 2023 Q1(c) (50 Hz version), Spring 2024 Q1(b)-OR, and Autumn 2025 Q1(b)-OR — three appearances, same structure.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-badge t2">Tier 2 · High probability</span>
+        <span class="tier-name">Group-B statistics &amp; error propagation</span>
+      </div>
+      <p class="tier-sub">The two workhorse numerical questions from the measurement half of the paper. Between them they've filled Q3(b)/Q4(a)/Q5(b) in almost every semester.</p>
+
+      <div class="card t2">
+        <div class="card-head">
+          <p class="card-title">Statistics on a data set — mean → deviation → std. deviation</p>
+          <span class="card-freq">4/7 semesters · 5 instances</span>
+        </div>
+        <div class="led-strip">
+          <span class="led lit-t2" title="Spring 2022"></span><span class="led" title="Spring 2023"></span><span class="led" title="Autumn 2023"></span><span class="led lit-t2" title="Spring 2024"></span><span class="led lit-t2" title="Autumn 2024"></span><span class="led lit-t2" title="Spring 2025"></span><span class="led" title="Autumn 2025"></span>
+        </div>
+        <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+        <p class="card-body" style="margin-top:10px">Same five calculations — arithmetic mean, deviation of each value, algebraic sum of deviations, average deviation, standard deviation (sometimes + variance) — dressed up as raw lettered data, voltage readings, or precision-resistor calibration. <strong>The story changes; the formulas never do.</strong> Spring 2025 alone used it twice (both halves of Q3(b)).</p>
+      </div>
+
+      <div class="card t2">
+        <div class="card-head">
+          <p class="card-title">Voltage measurement error propagation (V₁±%, V₂±%)</p>
+          <span class="card-freq">3/7 semesters</span>
+        </div>
+        <div class="led-strip">
+          <span class="led lit-t2" title="Spring 2022"></span><span class="led" title="Spring 2023"></span><span class="led" title="Autumn 2023"></span><span class="led lit-t2" title="Spring 2024"></span><span class="led lit-t2" title="Autumn 2024"></span><span class="led" title="Spring 2025"></span><span class="led" title="Autumn 2025"></span>
+        </div>
+        <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+        <p class="card-body" style="margin-top:10px">Given two voltages with a tolerance percentage each, find the max % error of each and the max % error in their difference. <strong>V₁=100V±1%, V₂=80V±5%</strong> is the exact pair reused in both Spring 2024 and Autumn 2024.</p>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-badge t3">Tier 3 · Medium probability</span>
+        <span class="tier-name">Due for a return, or too new to call</span>
+      </div>
+
+      <div class="card t3">
+        <div class="card-head">
+          <p class="card-title">Thermocouple EMF</p>
+          <span class="card-freq">3/7 semesters — skipped last paper</span>
+        </div>
+        <div class="led-strip">
+          <span class="led lit-t3" title="Spring 2022"></span><span class="led" title="Spring 2023"></span><span class="led" title="Autumn 2023"></span><span class="led" title="Spring 2024"></span><span class="led lit-t3" title="Autumn 2024"></span><span class="led lit-t3" title="Spring 2025"></span><span class="led" title="Autumn 2025"></span>
+        </div>
+        <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+        <p class="card-body" style="margin-top:10px">Copper-constantan thermocouple, <strong>c = 3.75×10⁻² mV/°C</strong> and <strong>k = 4.5×10⁻⁵ mV/°C²</strong> — these two constants have been identical every single time this has appeared. Only T₁ moves (usually 1000°C). It sat out Autumn 2025, which historically means it's due.</p>
+      </div>
+
+      <div class="card t3">
+        <div class="card-head">
+          <p class="card-title">Single-measurement error (absolute / % / relative accuracy)</p>
+          <span class="card-freq">1/7 — but it's the newest</span>
+        </div>
+        <div class="led-strip">
+          <span class="led" title="Spring 2022"></span><span class="led" title="Spring 2023"></span><span class="led" title="Autumn 2023"></span><span class="led" title="Spring 2024"></span><span class="led" title="Autumn 2024"></span><span class="led" title="Spring 2025"></span><span class="led lit-t3" title="Autumn 2025"></span>
+        </div>
+        <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+        <p class="card-body" style="margin-top:10px">Expected value vs. measured value → absolute error, percentage error, relative accuracy, percentage accuracy. Brand-new format in Autumn 2025. Either it's the new house style for this slot, or a one-off simpler cousin of the Tier-2 voltage-error question. Worth knowing both.</p>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-badge t4">Tier 4 · Watchlist</span>
+        <span class="tier-name">One appearance each — skim, don't cram</span>
+      </div>
+      <p class="tier-sub">Every semester in this set has introduced at least one numerical question nobody had seen before. That trend itself is worth planning for: expect one "surprise" calculation, possibly from a topic that's only ever been tested conceptually so far (RTD/thermistor numbers, a strain-gauge application, DVM/frequency-counter resolution).</p>
+      <ul class="watchlist">
+        <li><span class="tag">SP24 · Q2(a)-OR</span><strong>Stepper motor step angle &amp; resolution</strong> — given pole/teeth counts on a hybrid VR stepper.</li>
+        <li><span class="tag">SP25 · Q5(a)-I</span><strong>Displacement transducer / potentiometer circuit</strong> — solve for output voltage V₀ from wiper position.</li>
+        <li><span class="tag">SP24 · Q4(c)</span><strong>Op-amp common-mode gain analysis</strong> — "is this a good op-amp?" from given input/output voltages.</li>
+        <li><span class="tag">SP24 · Q1(b)</span><strong>Induction motor power flow &amp; efficiency</strong> — air-gap power, converted power, output power, efficiency from stated losses.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ PATTERN LOG ============ -->
+  <section id="patterns">
+    <p class="sec-eyebrow">Pattern log</p>
+    <h2 class="sec-title">Frequency, topic by topic</h2>
+    <p class="sec-intro">All 27 calculation problems, grouped by what they're actually testing rather than which question number they landed on (question numbers move; the underlying calculation doesn't).</p>
+
+    <div class="pattern-row">
+      <span class="pattern-name">Induction motor speed / slip / frequency / torque</span>
+      <span class="pattern-frac"><b>11</b> instances · 7/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:100%; background:var(--hot);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Statistics on a data set (mean/deviation/std. dev.)</span>
+      <span class="pattern-frac"><b>5</b> instances · 4/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:57%; background:var(--green);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Voltage error propagation (V₁±%, V₂±%)</span>
+      <span class="pattern-frac"><b>3</b> instances · 3/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:43%; background:var(--green);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Thermocouple EMF</span>
+      <span class="pattern-frac"><b>3</b> instances · 3/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:43%; background:var(--cyan);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Single-measurement error (absolute/%/relative accuracy)</span>
+      <span class="pattern-frac"><b>1</b> instance · 1/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:14%; background:var(--cyan);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Stepper motor step angle / resolution</span>
+      <span class="pattern-frac"><b>1</b> instance · 1/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:14%; background:var(--gray);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Displacement transducer / potentiometer circuit</span>
+      <span class="pattern-frac"><b>1</b> instance · 1/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:14%; background:var(--gray);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Op-amp common-mode gain / quality analysis</span>
+      <span class="pattern-frac"><b>1</b> instance · 1/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:14%; background:var(--gray);"></div></div>
+    </div>
+    <div class="pattern-row">
+      <span class="pattern-name">Induction motor power flow / efficiency</span>
+      <span class="pattern-frac"><b>1</b> instance · 1/7 sem</span>
+      <div class="pattern-bar-wrap"><div class="pattern-bar" style="width:14%; background:var(--gray);"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ ARCHIVE ============ -->
+  <section id="archive">
+    <p class="sec-eyebrow">Problem archive</p>
+    <h2 class="sec-title">Every calculation problem, by semester</h2>
+    <p class="sec-intro">Chronological, complete. Tap a semester to expand. <code>Marks</code> shown where legible on the scan; topic tags cross-reference the pattern log above.</p>
+
+    <details class="archive-sem" open>
+      <summary>Spring 2022 <span class="sem-meta">4 calc. problems</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(d)</span><span class="problem-marks">3 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 3-phase induction motor wound for 4 poles, supplied from a 50 Hz system.<br><strong>Find:</strong> (i) synchronous speed (ii) rotor speed when slip = 4% (iii) rotor frequency when the motor runs at 600 rpm</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q3(c)</span><span class="problem-marks">4 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> two instruments, V₁=90V±3%, V₂=80V±5%.<br><strong>Find:</strong> (a) max % error of each voltage measurement (b) max % error in the difference of the two voltages</p>
+          <div class="problem-topic">Topic: voltage error propagation</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q4(a)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> Z₁=70.7, Z₂=71.1, Z₃=70.2, Z₄=69.6, Z₅=71.7.<br><strong>Find:</strong> (i) arithmetic mean (ii) deviation of each value (iii) algebraic sum of deviations (iv) average deviation (v) standard deviation</p>
+          <div class="problem-topic">Topic: statistics on a data set</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q5(b)</span><span class="problem-marks">2 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> Cu-constantan thermocouple, c=3.75×10⁻² mV/°C, k=4.5×10⁻⁵ mV/°C²; T₁=1000°C, cold junction T₂ in ice.<br><strong>Find:</strong> resultant EMF</p>
+          <div class="problem-topic">Topic: thermocouple EMF</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="archive-sem">
+      <summary>Spring 2023 <span class="sem-meta">1 calc. problem</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(b)-OR</span><span class="problem-marks">3 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 3-phase induction motor, synchronous speed = 1800 rpm, slip = 4%.<br><strong>Find:</strong> actual motor speed (rpm)</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+          <p class="problem-body note">Lightest numerical load of any paper in this set — only one true calculation question all term.</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="archive-sem">
+      <summary>Autumn 2023 <span class="sem-meta">1 calc. problem</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(c)</span><span class="problem-marks">4 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 208-V, 10-hp, four-pole, 50-Hz, Y-connected induction motor, full-load slip = 5%.<br><strong>Find:</strong> (i) synchronous speed (ii) rotor speed at rated load (iii) rotor frequency at rated load (iv) shaft torque at rated load</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency (208V/10hp/Y family)</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="archive-sem">
+      <summary>Spring 2024 <span class="sem-meta">7 calc. problems — heaviest numerical paper</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(b)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 480-V, 50-Hz, 50-hp, 3-phase induction motor drawing 60A at 0.85 PF lagging; stator Cu loss=2.1kW, rotor Cu loss=300W, friction+windage=500W, core loss=1800W, stray loss negligible.<br><strong>Find:</strong> (i) air-gap power (ii) power converted (iii) output power (iv) efficiency</p>
+          <div class="problem-topic">Topic: IM power flow / efficiency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(b)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 208-V, 10-hp, four-pole, 60-Hz, Y-connected induction motor, full-load slip = 5%.<br><strong>Find:</strong> (i) synchronous speed (ii) rotor speed at rated load (iii) rotor frequency at rated load (iv) shaft torque at rated load</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency (208V/10hp/Y family)</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q2(a)</span><span class="problem-marks">3 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 6-pole, 3-phase induction motor, 60 Hz supply.<br><strong>Find:</strong> (i) magnetic field speed (ii) rotor speed (iii) frequency of rotor current at standstill</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q2(a)-OR</span><span class="problem-marks">3 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> hybrid VR stepping motor, 8 main poles castellated to 5 teeth each; rotor has 50 teeth.<br><strong>Find:</strong> (i) step angle (ii) resolution</p>
+          <div class="problem-topic">Topic: stepper motor step angle/resolution</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q4(a)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 5 precision resistors vs. a 1.0Ω standard — R₁=1.001Ω, R₂=1.002Ω, R₃=0.999Ω, R₄=0.998Ω, R₅=1.000Ω.<br><strong>Find:</strong> (i) average measured resistance (ii) average deviation (iii) standard deviation (iv) probable measurement error</p>
+          <div class="problem-topic">Topic: statistics on a data set</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q4(c)</span><span class="problem-marks">~5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> op-amp with common-mode gain = 5; input signals of 20V and 16V produce a 40V output.<br><strong>Find/Comment:</strong> is this a good op-amp, based on your analysis?</p>
+          <div class="problem-topic">Topic: op-amp quality analysis</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q5(b)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> V₁=100V±1%, V₂=80V±5%.<br><strong>Find:</strong> (i) max % error of each voltage measurement (ii) max % error in the difference of the two voltages</p>
+          <div class="problem-topic">Topic: voltage error propagation</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="archive-sem">
+      <summary>Autumn 2024 <span class="sem-meta">5 calc. problems</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(b)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> induction motor, synchronous speed=1500 rpm, rotor speed=1450 rpm.<br><strong>Find:</strong> (i) slip, in percentage (ii) rotor speed at rated load (iii) rotor frequency at rated load</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q2(a)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 4-pole, 3-phase induction motor, 50 Hz supply.<br><strong>Find:</strong> (i) speed of the stator magnetic field (ii) rotor speed at slip=0.04 (iii) rotor current frequency at slip=0.03 (iv) rotor current frequency at standstill</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q3(b)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> V₁=100V±1%, V₂=80V±5%.<br><strong>Find:</strong> (i) max % error for each voltage measurement (ii) max % error in the difference between the two voltages</p>
+          <div class="problem-topic">Topic: voltage error propagation</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q3(b)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 6 precision resistors vs. a 1.000Ω standard — R₁=1.003Ω, R₂=1.004Ω, R₃=1.001Ω, R₄=0.997Ω, R₅=0.999Ω, R₆=1.002Ω.<br><strong>Find:</strong> (i) average measured resistance (ii) average deviation (iii) standard deviation (iv) probable measurement error</p>
+          <div class="problem-topic">Topic: statistics on a data set</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q5(b)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> Cu-constantan thermocouple, c=3.75×10⁻² mV/°C, k=4.5×10⁻⁵ mV/°C²; T₁=100°C, cold junction T₂ in ice.<br><strong>Find:</strong> EMF</p>
+          <div class="problem-topic">Topic: thermocouple EMF</div>
+          <p class="problem-body note">⚠ Printed as T₁=100°C — every other appearance of this exact problem uses T₁=1000°C. Almost certainly a missing zero on the scan/stencil. Worth confirming with your instructor before trusting either value.</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="archive-sem">
+      <summary>Spring 2025 <span class="sem-meta">6 calc. problems</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(b)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 4-pole, 3-phase induction motor, 50 Hz supply.<br><strong>Find:</strong> (i) stator field speed (ii) motor speed at slip=3% (iii) rotor speed at slip=0.04 (iv) rotor current frequency at slip=0.03 (v) rotor current frequency at standstill</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1(b)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 3-phase induction motor wound for 5 poles, 50 Hz supply.<br><strong>Find:</strong> (i) synchronous speed (ii) rotor speed at slip=5% (iii) rotor frequency when the rotor runs at 500 rpm</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q3(b)</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> X₁=43.7, X₂=49.1, X₃=51.2, X₄=46.6, X₅=44.7.<br><strong>Find:</strong> arithmetic mean, deviation of each value, algebraic sum of deviations, average deviation, standard deviation</p>
+          <div class="problem-topic">Topic: statistics on a data set</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q3(b)-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 10 voltage readings — 54.58, 54.73, 54.86, 54.95, 55.00, 55.00, 55.08, 55.19, 55.31, 55.30 V.<br><strong>Find:</strong> arithmetic mean, deviation of each value, average deviation, standard deviation, variance</p>
+          <div class="problem-topic">Topic: statistics on a data set</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q5(a)-I</span><span class="problem-marks">part of 5</span></div>
+          <p class="problem-body"><strong>Given:</strong> displacement transducer, shaft stroke=3 in, potentiometer total resistance=5kΩ, applied voltage V_T=5V; wiper is 0.9 in from B.<br><strong>Find:</strong> output voltage V₀</p>
+          <div class="problem-topic">Topic: displacement transducer / potentiometer</div>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q5(a)-II</span><span class="problem-marks">part of 5</span></div>
+          <p class="problem-body"><strong>Given:</strong> Cu-constantan thermocouple, c=3.75×10⁻² mV/°C, k=4.5×10⁻⁵ mV/°C²; T₁=1000°C, cold junction T₂ in ice.<br><strong>Find:</strong> resultant EMF</p>
+          <div class="problem-topic">Topic: thermocouple EMF</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="archive-sem">
+      <summary>Autumn 2025 <span class="sem-meta">3 calc. problems — most recent paper</span></summary>
+      <div class="archive-body">
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1.b</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 4-pole, 3-phase induction motor, 50 Hz supply.<br><strong>Find:</strong> (i) stator field speed (ii) motor speed at slip=3% (iii) rotor speed at slip=0.04 (iv) rotor current frequency at slip=0.03 (v) rotor current frequency at standstill</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency</div>
+          <p class="problem-body note">Identical to Spring 2025 Q1(b) — same paper, same numbers, one semester apart.</p>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q1.b-OR</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> 208-V, 10-hp, four-pole, 60-Hz, Y-connected induction motor, full-load slip = 5%.<br><strong>Find:</strong> (i) synchronous speed (ii) rotor speed at rated load (iii) rotor frequency at rated load (iv) shaft torque at rated load</p>
+          <div class="problem-topic">Topic: IM speed/slip/frequency (208V/10hp/Y family)</div>
+          <p class="problem-body note">Identical to Spring 2024 Q1(b)-OR.</p>
+        </div>
+        <div class="problem">
+          <div class="problem-head"><span class="problem-tag">Q3.b</span><span class="problem-marks">5 marks</span></div>
+          <p class="problem-body"><strong>Given:</strong> expected voltage across a resistor = 90V, measurement gives 89V.<br><strong>Find:</strong> (a) absolute error (b) percentage error (c) relative accuracy (d) percentage of accuracy</p>
+          <div class="problem-topic">Topic: single-measurement error</div>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ DERIVATIONS ============ -->
+  <section id="derivations">
+    <p class="sec-eyebrow">Derivation watch</p>
+    <h2 class="sec-title">Recurring "derive / prove" questions</h2>
+    <p class="sec-intro">Not plug-in-the-numbers problems, but mathematical all the same — and they cycle just as predictably. Usually the Q4(a) or Q5(b) slot in Group B.</p>
+
+    <div class="deriv-row">
+      <div class="deriv-head">
+        <span class="deriv-title">Gauge factor / strain gauge derivation</span>
+        <span class="deriv-frac">3/7 — skipped last paper</span>
+      </div>
+      <div class="led-strip">
+        <span class="led" title="Spring 2022"></span><span class="led" title="Spring 2023"></span><span class="led lit-d" title="Autumn 2023"></span><span class="led" title="Spring 2024"></span><span class="led lit-d" title="Autumn 2024"></span><span class="led lit-d" title="Spring 2025"></span><span class="led" title="Autumn 2025"></span>
+      </div>
+      <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+      <p class="deriv-body" style="margin-top:10px">"What is a transducer? Prove/derive the gauge factor equation for a strain gauge." Skipped Autumn 2025 (replaced by conceptual thermocouple/thermistor + PV cell questions) — same "due for a return" logic as thermocouple EMF above.</p>
+    </div>
+
+    <div class="deriv-row">
+      <div class="deriv-head">
+        <span class="deriv-title">Logarithmic amplifier derivation</span>
+        <span class="deriv-frac">3/7 — absent last 2 papers</span>
+      </div>
+      <div class="led-strip">
+        <span class="led" title="Spring 2022"></span><span class="led lit-d" title="Spring 2023"></span><span class="led lit-d" title="Autumn 2023"></span><span class="led" title="Spring 2024"></span><span class="led lit-d" title="Autumn 2024"></span><span class="led" title="Spring 2025"></span><span class="led" title="Autumn 2025"></span>
+      </div>
+      <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+      <p class="deriv-body" style="margin-top:10px">Derive V₀ = −ηV_T ln(V_i/I₀R). Common through Autumn 2024, then dropped for two straight papers — looks retired in favor of the instrumentation-amplifier derivation below. Lower priority now.</p>
+    </div>
+
+    <div class="deriv-row">
+      <div class="deriv-head">
+        <span class="deriv-title">Three-op-amp instrumentation amplifier — gain derivation</span>
+        <span class="deriv-frac">1/7 — newest, likely the new standard</span>
+      </div>
+      <div class="led-strip">
+        <span class="led" title="Spring 2022"></span><span class="led" title="Spring 2023"></span><span class="led" title="Autumn 2023"></span><span class="led" title="Spring 2024"></span><span class="led" title="Autumn 2024"></span><span class="led lit-d" title="Spring 2025"></span><span class="led" title="Autumn 2025"></span>
+      </div>
+      <div class="led-labels"><span>22S</span><span>23S</span><span>23A</span><span>24S</span><span>24A</span><span>25S</span><span>25A</span></div>
+      <p class="deriv-body" style="margin-top:10px">Sketch the 3-op-amp instrumentation amplifier and derive the overall gain expression. Only appeared once so far (Spring 2025), right as the log-amp question disappeared — reads like a syllabus swap rather than a one-off.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p><span class="foot-hot">Methodology:</span> every question across the 7 uploaded papers was read and classified as either a calculation (given numeric data → compute a result) or a derivation/proof. Purely descriptive "explain/sketch/discuss" questions were excluded from both counts. Frequencies are counted per semester regardless of whether a problem appeared in the main slot or the OR alternative.</p>
+    <p>Want worked solutions for the Tier 1 problems, or a printable one-page cheat sheet of just the formulas (sync speed, slip, deviation/std. dev., thermocouple EMF, gauge factor)? Just ask.</p>
+  </footer>
+
+</div>
+</body>
+</html>

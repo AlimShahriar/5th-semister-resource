@@ -1,0 +1,5 @@
+Segment 08:*
+Define Transducer, Briefly Explain RTD, Thermocouple, Thermistor, Position Transducer all with
+relevant maths. PV cell (working, materials and selection), Piezoelectric Transducer, Piezoelectric 
+Ultrasonic Transducer
+- By Saif Sabbir Sir
